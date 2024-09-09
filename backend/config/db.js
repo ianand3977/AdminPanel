@@ -1,11 +1,15 @@
 const { Sequelize } = require('sequelize');
-require('dotenv').config(); // Ensure this is at the top to load environment variables
+require('dotenv').config();
 
-// Create Sequelize instance using DATABASE_URL
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: 'postgres',
   protocol: 'postgres',
-  logging: false, // Disable logging if not needed
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false,  // Important for Heroku/Render SSL connections
+    }
+  }
 });
 
 sequelize.authenticate()
