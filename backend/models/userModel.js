@@ -1,3 +1,4 @@
+// User Model
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
@@ -27,7 +28,7 @@ module.exports = (sequelize) => {
       type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: 'roles',
+        model: 'roles', // Ensure this matches the table name in PostgreSQL
         key: 'id',
       },
     },
@@ -41,7 +42,7 @@ module.exports = (sequelize) => {
   });
 
   User.associate = (models) => {
-    User.belongsTo(models.Role, { foreignKey: 'roleId', as: 'role' });
+    User.belongsTo(models.Role, { foreignKey: 'role_id', as: 'role' });
     User.hasMany(models.Project, { foreignKey: 'createdBy', as: 'createdProjects' });
     User.belongsToMany(models.Project, { through: 'ProjectAssignments', foreignKey: 'userId', as: 'assignedProjects' });
   };

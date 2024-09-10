@@ -13,6 +13,7 @@ if (config.use_env_variable) {
   sequelize = new Sequelize(config.database, config.username, config.password, config);
 }
 
+// Read all model files in the directory and import them
 fs
   .readdirSync(__dirname)
   .filter(file => {
@@ -23,13 +24,14 @@ fs
     db[model.name] = model;
   });
 
-// Call the associate method if defined
+// Ensure all associations are set
 Object.keys(db).forEach(modelName => {
   if (db[modelName].associate) {
-    db[modelName].associate(db);
+    db[modelName].associate(db);  // Call the associate method, if defined
   }
 });
 
+// Attach Sequelize instance to db object
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 

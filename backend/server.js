@@ -1,4 +1,5 @@
 const express = require('express');
+const sequelize = require('./config/db'); // Import sequelize
 const passport = require('passport');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -42,14 +43,16 @@ app.use((err, req, res, next) => {
 });
 
 // Initialize Sequelize and sync models
-const sequelize = require('./config/db'); // Import sequelize
-sequelize.sync({ force: true }) // Sync models
+
+// Sync Sequelize models
+sequelize.sync({ alter: true }) // Use alter for updating tables without dropping them
   .then(() => {
     console.log('Database synchronized');
   })
   .catch(err => {
     console.log('Error syncing the database: ', err);
   });
+
 
 // Start the server
 const PORT = process.env.PORT || 5000;

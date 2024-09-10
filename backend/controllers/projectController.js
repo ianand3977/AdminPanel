@@ -53,20 +53,45 @@ exports.createProject = async (req, res) => {
 // Get projects (Role-based access)
 exports.getProjects = async (req, res) => {
     try {
-        let projects = [];
-        if (req.user.role === 'Admin') {
-            projects = await Project.findAll(); // Admin can see all projects
-        } else if (req.user.role === 'Manager') {
-            projects = await Project.findAll({ where: { managerId: req.user.id } }); // Manager sees assigned projects
-        } else if (req.user.role === 'Employee') {
-            projects = await Project.findAll({ 
-                include: {
-                    model: User,
-                    where: { id: req.user.id } // Employee sees assigned projects
+        // Extract user ID from request
+        const userId = req.user.id;
+
+        // Find the user's role
+        const user = await User.findByPk(userId, {
+            include: [{ model: Role, as: 'role' }]
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Determine role and fetch projects accordingly
+        let projects;
+        if (user.role.name === 'Admin') {
+            // Admin can see all projects
+            projects = await Project.findAll();
+        } else if (user.role.name === 'Manager') {
+            // Managers can see all projects assigned to them or created by them
+            projects = await Project.findAll({
+                where: {
+                    [Op.or]: [
+                        { createdBy: userId },
+                        { assignedTo: { [Op.contains]: [userId] } }
+                    ]
                 }
             });
+        } else if (user.role.name === 'Employee') {
+            // Employees can only see projects assigned to them
+            projects = await Project.findAll({
+                where: {
+                    assignedTo: { [Op.contains]: [userId] }
+                }
+            });
+        } else {
+            return res.status(403).json({ message: 'Access denied' });
         }
-        res.json(projects);
+
+        res.status(200).json({ projects });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
